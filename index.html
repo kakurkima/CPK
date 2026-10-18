@@ -2152,13 +2152,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     bgDim: 0.55,
     land: {
       width: 1,
-      judgeY: 0.84,
+      judgeY: 0.9,
       far: 0.2,
       hud: { score: { x: 0.014, y: 0.03, s: 1 }, combo: { x: 0.84, y: 0.42, s: 1 }, judge: { x: 0.5, y: 0.62, s: 1 } }
     },
     port: {
       width: 1,
-      judgeY: 0.79,
+      judgeY: 0.85,
       far: 0.24,
       hud: { score: { x: 0.035, y: 0.018, s: 1 }, combo: { x: 0.5, y: 0.39, s: 1 }, judge: { x: 0.5, y: 0.61, s: 1 } }
     }
@@ -2176,6 +2176,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var num = (v, d, r) => Number.isFinite(+v) ? clamp(+v, r[0], r[1]) : d;
   var isHex = (s) => typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s);
   var OLD_DEFAULT = { bg: "#0b0d1d", accent: "#9a90ff" };
+  var OLD_JUDGE_Y = { land: 0.84, port: 0.79 };
   function cloneDesign(d) {
     return JSON.parse(JSON.stringify(d));
   }
@@ -2205,7 +2206,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const src = r[o] && typeof r[o] === "object" ? r[o] : {};
       const dst = out[o];
       dst.width = num(src.width, D[o].width, RANGES.width);
-      dst.judgeY = num(src.judgeY, D[o].judgeY, RANGES.judgeY);
+      dst.judgeY = src.judgeY === OLD_JUDGE_Y[o] ? D[o].judgeY : num(src.judgeY, D[o].judgeY, RANGES.judgeY);
       dst.far = num(src.far, D[o].far, RANGES.far);
       const sh = src.hud && typeof src.hud === "object" ? src.hud : {};
       for (const k of ["score", "combo", "judge"]) {
@@ -2315,7 +2316,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const Wj = Math.min(W * 1.15, base * L.width);
       this.U = Wj / 12;
       this.cx = W / 2;
-      this.yFar = H * (portrait ? 0.15 : 0.06);
+      this.yFar = H * (portrait ? 0.11 : 0.03);
       this.jy = Math.max(this.yFar + H * 0.2, H * L.judgeY);
       this.sFar = L.far;
       this.k = 1 / this.sFar - 1;
@@ -3269,7 +3270,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 
   // ../shared/engine.js
   var KEYMAP = { KeyS: [0, 2], KeyD: [2, 4], KeyF: [4, 6], KeyJ: [6, 8], KeyK: [8, 10], KeyL: [10, 12] };
-  var approachTime = (speed) => 4 * Math.pow(0.82, speed - 1);
+  var LANE_LONGER = 1.13;
+  var approachTime = (speed) => 4 * Math.pow(0.82, speed - 1) * LANE_LONGER;
   var FLOWS = { even: 0, sekai: 1, deep: 2 };
   var flowOf = (key) => key in FLOWS ? FLOWS[key] : FLOWS.even;
   var seKind = (e) => e.crit ? "crit" : e.kind === "flick" || e.kind === "tailFlick" ? "flick" : e.kind === "tick" ? "tick" : e.kind === "trace" ? "trace" : "tap";
@@ -3374,7 +3376,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       this.r.lastCombo = 0;
       this.audio.seOn = this.settings.se;
       this.audio.setBuffer(this.song.buffer);
-      this.lead = opts.from != null ? opts.from : Math.min(0, cc.first - 2.2);
+      this.lead = opts.from != null ? opts.from : Math.min(0, cc.first - Math.max(2.2, approachTime(this.settings.speed) + 0.3));
       this.seCursor = 0;
       this.mode = "play";
       this.audio.play(this.lead, { freeUntil: cc.first - approachTime(this.settings.speed) - 0.3 });
