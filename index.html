@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>채보 스튜디오</title>
+<title>Cosmic Princess Kaguya bamboo shoot stage, feat 168, 8000</title>
 <meta name="description" content="팬메이드 리듬게임 — 직접 만든 채보로 플레이해요.">
-<meta property="og:title" content="채보 스튜디오">
+<meta property="og:title" content="Cosmic Princess Kaguya bamboo shoot stage, feat 168, 8000">
 <meta property="og:description" content="팬메이드 리듬게임 — 직접 만든 채보로 플레이해요.">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,12 +37,27 @@ body{margin:0;height:100dvh;background:var(--bg);color:var(--fg);font:14px/1.5 v
 button{font:inherit;color:inherit;touch-action:manipulation}
 :is(button,input,textarea,select,summary,label.btn):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{position:relative;height:100%;overflow:hidden}
+/* 늘 가로 화면 (프세카처럼): 휴대폰을 세로로 들면 페이지 전체를 시계 방향으로 90° 돌린다 (orient.js 가 html.rot 을 붙임).
+   돌린 뒤의 왼쪽 = 휴대폰 위쪽, 오른쪽 = 아래쪽이라 안전 영역도 그쪽 것을 쓴다 */
+html.rot{background:var(--bg)}
+html.rot,html.rot body{overflow:hidden}
+html.rot body{position:fixed;left:0;top:0;width:var(--app-w,100vh);height:var(--app-h,100vw);transform-origin:0 0;transform:translateX(var(--app-h,100vw)) rotate(90deg);
+  padding-left:max(16px,env(safe-area-inset-top,0px));padding-right:max(16px,env(safe-area-inset-bottom,0px));
+  padding-top:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-left,0px)}
+@supports (height:100dvh){html.rot body{width:100dvh;height:100dvw;transform:translateX(100dvw) rotate(90deg)}}
+/* 크롬은 슬라이더의 '세로로 밀면 스크롤'(pan-y)을 돌리기 전 방향으로 따져서, 돌린 화면에서는 슬라이더를 끄는 손가락을 스크롤로 빼앗는다 */
+html.rot input[type=range]{touch-action:none}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
 .page{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-block:14px 32px;display:flex;flex-direction:column;gap:16px}
 .page>*{width:100%;max-width:980px;margin-inline:auto}
 .eyebrow{margin:0;font:600 11px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:400;letter-spacing:.01em;text-wrap:balance}
 h1{font-size:26px}h2{font-size:22px}h3{font-size:16px;font-family:var(--font-body);font-weight:600}
+/* 사이트 이름: Kaguya 노랑 · 168 보라 · 8000 흰색 · 나머지 회색 (그 낱말이 들어 있을 때만 — design.js titleParts) */
+.title.marked{color:#8e8e8e}
+.title .m-kaguya{color:#ffd23f}
+.title .m-168{color:#b07cff}
+.title .m-8000{color:#ffffff}
 p{margin:0}
 .muted{color:var(--muted)}
 .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -197,6 +212,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   .editor{gap:4px;padding-block:4px}
   .ed-top{min-height:40px}
 }
+/* 돌린 가로 화면(html.rot)용 같은 규칙: 미디어 쿼리는 세로 화면 기준이라 높이 ↔ 너비 */
+@media (max-width:540px){:where(html.rot) .ed-bottom{flex-direction:row;align-items:center;overflow-x:auto}:where(html.rot) .ed-tools{flex:none}:where(html.rot) .ed-tools .tool{width:52px;flex:none}:where(html.rot) .ed-opts{overflow:visible}:where(html.rot) .tool{height:42px}:where(html.rot) .tool svg{height:12px}:where(html.rot) .editor{gap:4px;padding-block:4px}:where(html.rot) .ed-top{min-height:40px}
+}
 
 /* 디자인 */
 .ds-panel{position:absolute;left:0;right:0;bottom:0;max-height:56%;display:flex;flex-direction:column;background:rgba(18,18,18,.97);border:1px solid var(--line2);border-radius:18px 18px 0 0;z-index:3;transition:transform .2s}
@@ -209,6 +227,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   .ds-panel.collapsed{transform:none;bottom:auto}
   .ds-panel.collapsed .ds-body{display:none}
 }
+/* 돌린 가로 화면(html.rot)도 가로 화면 */
+:where(html.rot) .ds-panel{left:auto;top:8px;width:min(380px,48%);max-height:none;border-radius:18px 0 0 18px}:where(html.rot) .ds-panel.collapsed{transform:none;bottom:auto}:where(html.rot) .ds-panel.collapsed .ds-body{display:none}
 .ds-sec{display:flex;flex-direction:column;gap:8px}
 .ds-sec h3{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em}
 .slider{display:grid;grid-template-columns:88px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:13px}
@@ -238,6 +258,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .r-meta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .r-meta b{color:var(--fg)}
 @media (max-height:430px){.rank{font-size:68px}.score{font-size:30px}.ov-card{padding:12px;gap:10px}}
+/* 돌린 가로 화면(html.rot)용 */
+@media (max-width:430px){:where(html.rot) .rank{font-size:68px}:where(html.rot) .score{font-size:30px}:where(html.rot) .ov-card{padding:12px;gap:10px}}
 
 /* 공용 창 */
 .modal{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding-block:12px;background:rgba(0,0,0,.72)}
@@ -266,7 +288,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       <header class="topbar">
         <div style="min-width:0">
           <p class="eyebrow" id="siteSub">팬메이드 리듬게임</p>
-          <h1 id="siteTitle">채보 스튜디오</h1>
+          <h1 id="siteTitle" class="title marked">Cosmic Princess <span class="m-kaguya">Kaguya</span> bamboo shoot stage, feat <span class="m-168">168</span>, <span class="m-8000">8000</span></h1>
         </div>
         <div class="row">
           <button class="btn" id="designBtn" type="button" hidden>디자인 모드</button>
@@ -1180,7 +1202,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     for (let bar = 0; bar < bars; bar++) {
       const s = sec(bar);
       const b0 = bar * 4;
-      const ch = CHORDS[bar % 4], root = ROOTS[bar % 4];
+      const ch = CHORDS[bar % 4], root2 = ROOTS[bar % 4];
       const padAmp = s === "bridge" ? 0.085 : s === "outro" ? 0.07 : 0.06;
       for (const m of ch) {
         voice({ t: bt(b0), d: bt(4) - 0.05, f: mf(m) * 0.997, kind: "saw", amp: padAmp, a: 0.18, rel: 0.25, lp: s === "chorus" ? 1600 : 1100, pan: -0.5 });
@@ -1215,11 +1237,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         }
       }
       if (s !== "intro" && s !== "outro") {
-        if (s === "bridge") voice({ t: bt(b0), d: bt(4) - 0.05, f: mf(root), kind: "saw", amp: 0.2, rel: 0.1, lp: 420 });
+        if (s === "bridge") voice({ t: bt(b0), d: bt(4) - 0.05, f: mf(root2), kind: "saw", amp: 0.2, rel: 0.1, lp: 420 });
         else {
           const step = s === "a" ? 1 : 0.5;
           for (let x = 0; x < 4; x += step) {
-            const m = s === "chorus" && Math.round(x * 2) % 2 === 1 ? root + 12 : root;
+            const m = s === "chorus" && Math.round(x * 2) % 2 === 1 ? root2 + 12 : root2;
             voice({ t: bt(b0 + x), d: bt(step) * 0.75, f: mf(m), kind: "saw", amp: 0.22, rel: 0.06, lp: 900, lpEnd: 380 });
           }
         }
@@ -1984,9 +2006,24 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   }
 
   // ../shared/design.js
+  var TITLE_MAX = 80;
+  var OLD_TITLES = ["채보 스튜디오"];
+  var TITLE_MARKS = { Kaguya: "kaguya", 168: "168", 8e3: "8000" };
+  function titleParts(s) {
+    const out = [];
+    const re = /\b(Kaguya|168|8000)\b/g;
+    let i = 0, m;
+    while (m = re.exec(s)) {
+      if (m.index > i) out.push({ text: s.slice(i, m.index), mark: null });
+      out.push({ text: m[1], mark: TITLE_MARKS[m[1]] });
+      i = m.index + m[1].length;
+    }
+    if (i < s.length) out.push({ text: s.slice(i), mark: null });
+    return out;
+  }
   var DEFAULT_DESIGN = {
     v: 1,
-    siteTitle: "채보 스튜디오",
+    siteTitle: "Cosmic Princess Kaguya bamboo shoot stage, feat 168, 8000",
     siteSub: "팬메이드 리듬게임",
     // 화면은 검정 · 흰색 · 회색만. 색은 노트 종류를 구별하는 노트에만 쓴다.
     colors: {
@@ -2048,7 +2085,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     out.bgDim = num(r.bgDim, D.bgDim, RANGES.bgDim);
     out.bgImage = typeof r.bgImage === "string" && /^[A-Za-z0-9_][A-Za-z0-9_./-]{3,199}$/.test(r.bgImage) && !r.bgImage.includes("..") ? r.bgImage : null;
     const text = (v, d, n) => typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, n) : d;
-    out.siteTitle = text(r.siteTitle, D.siteTitle, 30) || D.siteTitle;
+    out.siteTitle = text(r.siteTitle, D.siteTitle, TITLE_MAX) || D.siteTitle;
+    if (OLD_TITLES.includes(out.siteTitle)) out.siteTitle = D.siteTitle;
     out.siteSub = text(r.siteSub, D.siteSub, 40);
     for (const o of ["land", "port"]) {
       const src = r[o] && typeof r[o] === "object" ? r[o] : {};
@@ -2956,6 +2994,148 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     }
   };
 
+  // ../shared/orient.js
+  var root = typeof document !== "undefined" ? document.documentElement : null;
+  var isRotated = () => !!root && root.classList.contains("rot");
+  function localXY(el2, e, rect) {
+    const r = rect || el2.getBoundingClientRect();
+    if (isRotated()) return [e.clientY - r.top, r.right - e.clientX];
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+  var started = false;
+  var isTouch = () => {
+    if (typeof matchMedia !== "function") return false;
+    if (matchMedia("(pointer: coarse)").matches) return true;
+    return (navigator.maxTouchPoints || 0) > 0 && matchMedia("(hover: none)").matches;
+  };
+  function keepLandscape() {
+    if (!root || started) return { lock: lockLandscape };
+    started = true;
+    const typing = () => {
+      const a = document.activeElement;
+      if (!a) return false;
+      if (a.isContentEditable || a.tagName === "TEXTAREA") return true;
+      return a.tagName === "INPUT" && !/^(checkbox|radio|range|button|submit|reset|file|color|image)$/i.test(a.type);
+    };
+    const pointers = /* @__PURE__ */ new Set();
+    let calmAt = 0;
+    const calm = () => pointers.size === 0 && performance.now() - calmAt > 50;
+    let last = null, timer = 0, poll = 0;
+    const apply = () => {
+      clearTimeout(timer);
+      timer = 0;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const want = isTouch() && vh > vw;
+      const held = want && typing();
+      const rot = want && !held;
+      if (held && !poll) poll = setInterval(apply, 400);
+      if (!held && poll) {
+        clearInterval(poll);
+        poll = 0;
+      }
+      if (last && last.want === want && last.rot !== rot && !calm()) {
+        root.dataset.rotPending = "1";
+        timer = setTimeout(apply, 60);
+        return;
+      }
+      delete root.dataset.rotPending;
+      if (last && last.rot === rot && last.vw === vw && last.vh === vh) return;
+      last = { want, rot, vw, vh };
+      root.classList.toggle("rot", rot);
+      root.style.setProperty("--app-w", (rot ? vh : vw) + "px");
+      root.style.setProperty("--app-h", (rot ? vw : vh) + "px");
+    };
+    const on = (e) => {
+      pointers.add(e.pointerId);
+      calmAt = performance.now();
+    };
+    const off = (e) => {
+      pointers.delete(e.pointerId);
+      calmAt = performance.now();
+    };
+    window.addEventListener("pointerdown", on, true);
+    window.addEventListener("pointerup", off, true);
+    window.addEventListener("pointercancel", off, true);
+    document.addEventListener("visibilitychange", () => {
+      pointers.clear();
+      apply();
+    });
+    const focusMoved = () => {
+      calmAt = performance.now();
+      clearTimeout(timer);
+      timer = setTimeout(apply, 60);
+    };
+    document.addEventListener("focusin", focusMoved);
+    document.addEventListener("focusout", focusMoved);
+    apply();
+    window.addEventListener("resize", apply);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", apply);
+    window.addEventListener("orientationchange", () => {
+      apply();
+      setTimeout(apply, 300);
+    });
+    const once = () => {
+      window.removeEventListener("click", once, true);
+      lockLandscape();
+    };
+    window.addEventListener("click", once, true);
+    rangeDrag();
+    return { lock: lockLandscape };
+  }
+  function rangeDrag() {
+    let cur = null;
+    const isRange = (el2) => el2 instanceof HTMLInputElement && el2.type === "range" && !el2.disabled;
+    const setFrom = (e) => {
+      const el2 = cur.el;
+      const [x] = localXY(el2, e);
+      const pad = 8;
+      const p = Math.min(1, Math.max(0, (x - pad) / Math.max(1, el2.offsetWidth - pad * 2)));
+      const min = el2.min === "" ? 0 : +el2.min, max = el2.max === "" ? 100 : +el2.max;
+      const step = el2.step === "any" ? 0 : +el2.step || 1;
+      let v = min + (max - min) * p;
+      if (step) v = min + Math.round((v - min) / step) * step;
+      v = Math.min(max, Math.max(min, v));
+      const s = String(+v.toFixed(6));
+      if (s !== el2.value) {
+        el2.value = s;
+        el2.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    };
+    document.addEventListener("touchstart", (e) => {
+      if (isRotated() && isRange(e.target)) e.preventDefault();
+    }, { capture: true, passive: false });
+    document.addEventListener("pointerdown", (e) => {
+      if (!isRotated() || e.pointerType === "mouse" || !isRange(e.target)) return;
+      cur = { el: e.target, id: e.pointerId };
+      try {
+        cur.el.setPointerCapture(e.pointerId);
+      } catch (err) {
+      }
+      setFrom(e);
+    }, true);
+    document.addEventListener("pointermove", (e) => {
+      if (cur && e.pointerId === cur.id) setFrom(e);
+    }, true);
+    const end = (e) => {
+      if (!cur || e.pointerId !== cur.id) return;
+      const el2 = cur.el;
+      cur = null;
+      el2.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    document.addEventListener("pointerup", end, true);
+    document.addEventListener("pointercancel", end, true);
+  }
+  async function lockLandscape() {
+    if (!root || !isTouch()) return false;
+    try {
+      if (!document.fullscreenElement && root.requestFullscreen) await root.requestFullscreen({ navigationUI: "hide" });
+      if (screen.orientation && screen.orientation.lock) await screen.orientation.lock("landscape");
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // ../shared/engine.js
   var KEYMAP = { KeyS: [0, 2], KeyD: [2, 4], KeyF: [4, 6], KeyJ: [6, 8], KeyK: [8, 10], KeyL: [10, 12] };
   var approachTime = (speed) => 4 * Math.pow(0.82, speed - 1);
@@ -2996,9 +3176,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       requestAnimationFrame(this._loop);
     }
     resize() {
-      const rect = this.cv.getBoundingClientRect();
       const dpr = Math.min(this.dprCap || 2, window.devicePixelRatio || 1);
-      this.r.resize(Math.max(1, rect.width), Math.max(1, rect.height), dpr);
+      this.r.resize(Math.max(1, this.cv.clientWidth), Math.max(1, this.cv.clientHeight), dpr);
     }
     // 그리기가 오래 걸리는 기기(그래픽 가속이 꺼진 휴대폰 등)는 화면 해상도를 한 단계씩 낮춰서
     // 프레임이 밀리며 노트가 뚝뚝 끊겨 내려오지 않게 한다
@@ -3220,8 +3399,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       return this.audio.now(ms) - this.settings.offsetMs / 1e3;
     }
     _xy(e, rect) {
-      const r = rect || this.cv.getBoundingClientRect();
-      return [e.clientX - r.left, e.clientY - r.top];
+      return localXY(this.cv, e, rect);
     }
     _pdown(e) {
       if (this.mode !== "play" || this.settings.auto) return;
@@ -4603,10 +4781,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     }
     // ---------- 화면 배치 ----------
     resize() {
-      const r = this.cv.getBoundingClientRect();
       this.dpr = Math.min(2, window.devicePixelRatio || 1);
-      this.W = Math.max(1, r.width);
-      this.H = Math.max(1, r.height);
+      this.W = Math.max(1, this.cv.clientWidth);
+      this.H = Math.max(1, this.cv.clientHeight);
       this.cv.width = Math.round(this.W * this.dpr);
       this.cv.height = Math.round(this.H * this.dpr);
       this.ML = 34;
@@ -4958,8 +5135,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       window.addEventListener("keydown", (e) => this._key(e));
     }
     _xy(e) {
-      const r = this.cv.getBoundingClientRect();
-      return [e.clientX - r.left, e.clientY - r.top];
+      return localXY(this.cv, e);
     }
     _down(e) {
       if (!this.visible) return;
@@ -6319,8 +6495,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       return this.design[this.orient];
     }
     resize() {
-      const rect = this.cv.getBoundingClientRect();
-      this.r.resize(Math.max(1, rect.width), Math.max(1, rect.height), Math.min(2, window.devicePixelRatio || 1));
+      this.r.resize(Math.max(1, this.cv.clientWidth), Math.max(1, this.cv.clientHeight), Math.min(2, window.devicePixelRatio || 1));
       this.onSelect(this.selected);
     }
     // 슬라이더 등에서 값을 바꿨을 때
@@ -6336,8 +6511,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       this.onSelect(key);
     }
     _xy(e) {
-      const r = this.cv.getBoundingClientRect();
-      return [e.clientX - r.left, e.clientY - r.top];
+      return localXY(this.cv, e);
     }
     _down(e) {
       const [x, y] = this._xy(e);
@@ -6493,7 +6667,15 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       g.fill();
     }
   }
+  function paintTitle(node, text) {
+    const parts = titleParts(text);
+    node.textContent = "";
+    node.classList.add("title");
+    node.classList.toggle("marked", parts.some((x) => x.mark));
+    for (const x of parts) node.append(x.mark ? el("span", { class: "m-" + x.mark, text: x.text }) : document.createTextNode(x.text));
+  }
   function boot(data) {
+    keepLandscape();
     const store = new Store(window.SK_CONFIG);
     const audio = new AudioEngine();
     const cur = { screen: "home", songId: null, edit: null, returnTo: "home", playOpts: {}, playing: null, dsDirty: false, dsPending: [], dsSavedBg: null };
@@ -6587,7 +6769,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       card.textContent = "";
       $("#modal").hidden = false;
       build(card, closeModal);
-      const f = opts.focus === false ? card.querySelector(".foot .btn.primary") : card.querySelector("input,button,select,textarea");
+      const f = opts.focus === false || isRotated() ? card.querySelector(".foot .btn.primary") : card.querySelector("input,button,select,textarea");
       if (f) try {
         f.focus({ preventScroll: true });
       } catch (e) {
@@ -6806,13 +6988,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       styles = makeStyles(design.colors);
       game.setDesign(design, assetUrl);
       editor.setStyles(styles);
-      const root = document.documentElement.style;
+      const root2 = document.documentElement.style;
       document.title = design.siteTitle;
-      $("#siteTitle").textContent = design.siteTitle;
+      paintTitle($("#siteTitle"), design.siteTitle);
       $("#siteSub").textContent = design.siteSub;
       $("#siteSub").hidden = !design.siteSub;
-      root.setProperty("--accent", design.colors.accent);
-      for (const k of ["tap", "flick", "trace", "slide"]) root.setProperty("--c-" + k, design.colors[k]);
+      root2.setProperty("--accent", design.colors.accent);
+      for (const k of ["tap", "flick", "trace", "slide"]) root2.setProperty("--c-" + k, design.colors[k]);
     }
     applyDesign(design);
     const demoChart = buildDemoChart();
@@ -7989,6 +8171,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       }
       editor.stop();
       audio.unlock();
+      lockLandscape();
       cur.returnTo = "editor";
       cur.playOpts = from != null ? { from } : {};
       cur.playing = { test: true };
@@ -8002,6 +8185,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const s = getSong(songId);
       if (!s) return;
       const unlock = audio.unlock();
+      lockLandscape();
       cur.returnTo = "songView";
       cur.playOpts = {};
       cur.playing = { songId, diff, full: true, title: s.title };
@@ -8277,7 +8461,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         "div",
         { class: "ds-sec" },
         el("h3", { text: "사이트 글자" }),
-        siteText("dsSiteTitle", "사이트 이름 (첫 화면 큰 글자)", "siteTitle", 30),
+        siteText("dsSiteTitle", "사이트 이름 (첫 화면 큰 글자)", "siteTitle", TITLE_MAX),
         siteText("dsSiteSub", "위의 작은 글자 (비워도 돼요)", "siteSub", 40)
       ));
       put(body, el(
