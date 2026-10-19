@@ -316,6 +316,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .lang{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
 .lang svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.4;flex:none}
 .lang select{min-height:36px;width:auto;padding:0 28px 0 10px}
+.fs-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .badges{display:flex;gap:5px;flex-wrap:wrap}
 .badge.mv{color:var(--fg);border-color:var(--fg)}
 /* 곡 추가 창: 음악 / 영상 고르기, 진행 막대, 가볍게 만드는 동안 미리보기 */
@@ -459,6 +460,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       <div class="home-tools">
         <label class="chk mv-only" for="mvOnly"><input type="checkbox" id="mvOnly"><span>MV 있는 노래만 보기</span></label>
         <label class="lang" for="langSel"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M2 10h16M10 2c2.6 2.4 2.6 13.6 0 16M10 2c-2.6 2.4-2.6 13.6 0 16"/></svg><select id="langSel" aria-label="언어" translate="no"><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option></select></label>
+        <button class="btn small fs-btn" id="fsBtn" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg><span>전체 화면</span></button>
       </div>
       <p class="notice" id="notice" hidden></p>
       <div class="grid" id="songGrid"></div>
@@ -3235,7 +3237,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     return (navigator.maxTouchPoints || 0) > 0 && matchMedia("(hover: none)").matches;
   };
   function keepLandscape() {
-    if (!root || started) return { lock: lockLandscape };
+    if (!root || started) return {};
     started = true;
     const typing = () => {
       const a = document.activeElement;
@@ -3300,13 +3302,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       apply();
       setTimeout(apply, 300);
     });
-    const once = () => {
-      window.removeEventListener("click", once, true);
-      lockLandscape();
-    };
-    window.addEventListener("click", once, true);
     rangeDrag();
-    return { lock: lockLandscape };
+    return {};
   }
   function rangeDrag() {
     let cur = null;
@@ -3351,14 +3348,29 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     document.addEventListener("pointerup", end, true);
     document.addEventListener("pointercancel", end, true);
   }
-  async function lockLandscape() {
-    if (!root || !isTouch()) return false;
+  var fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  function canFullscreen() {
+    const d = document.documentElement;
+    return !!(d.requestFullscreen || d.webkitRequestFullscreen) && document.fullscreenEnabled !== false;
+  }
+  function isFullscreen() {
+    return !!fsEl();
+  }
+  async function toggleFullscreen() {
+    const d = document.documentElement;
     try {
-      if (!document.fullscreenElement && root.requestFullscreen) await root.requestFullscreen({ navigationUI: "hide" });
-      if (screen.orientation && screen.orientation.lock) await screen.orientation.lock("landscape");
+      if (fsEl()) {
+        await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return false;
+      }
+      if (screen.orientation && screen.orientation.unlock) try {
+        screen.orientation.unlock();
+      } catch (e) {
+      }
+      await (d.requestFullscreen || d.webkitRequestFullscreen).call(d, { navigationUI: "hide" });
       return true;
     } catch (e) {
-      return false;
+      return isFullscreen();
     }
   }
 
@@ -4311,7 +4323,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     "첫 화면 미리 보기": ["Preview title screen", "タイトル画面をプレビュー"],
     "사진을 올리는 중…": ["Uploading photo…", "写真をアップロード中…"],
     "첫 화면 사진을 넣었어요. 저장을 눌러야 남아요.": ["Title photo added. Press Save to keep it.", "タイトル写真を入れました。保存を押すと残ります。"],
-    "로그인 없이 둘러보기": ["Look around without logging in", "ログインせずに見てみる"]
+    "로그인 없이 둘러보기": ["Look around without logging in", "ログインせずに見てみる"],
+    "전체 화면": ["Full screen", "全画面"],
+    "전체 화면 끄기": ["Exit full screen", "全画面を終了"]
   };
 
   // src/i18n.js
@@ -5014,6 +5028,23 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     const root2 = document.createElement("div");
     root2.className = "gate";
     root2.id = "gateScreen";
+    if (opts.brief) {
+      root2.innerHTML = '<div class="gate-bg default"></div>';
+      document.body.appendChild(root2);
+      let closed2 = false;
+      const finish2 = () => {
+        if (closed2) return;
+        closed2 = true;
+        whiteout(() => {
+          root2.remove();
+          if (opts.onClose) opts.onClose();
+        });
+      };
+      root2.addEventListener("click", finish2);
+      setTimeout(finish2, 2200);
+      return { finish: finish2, setTitle() {
+      }, skip: null };
+    }
     root2.innerHTML = `<div class="gate-bg"></div>
 <div class="gw" role="dialog" aria-modal="true" aria-labelledby="gwTitle">
   <div class="gw-in">
@@ -8680,11 +8711,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     });
     if (!window.__SK_NO_TITLE) openTitle(null, () => {
       if (audio.unlock) audio.unlock();
-      if (store.configured && !store.loggedIn) {
-        openGate();
-        return true;
-      }
-      return false;
+      if (!store.configured) return false;
+      if (store.loggedIn) showGate({ image: null, brief: true, onClose: () => {
+        $("#app").inert = false;
+      } });
+      else openGate();
+      return true;
     });
     applyDesign(design);
     const demoChart = buildDemoChart();
@@ -8809,6 +8841,19 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       if (cur.screen === "songView") renderSong();
       renderHome();
     });
+    const paintFs = () => {
+      $("#fsBtn span").textContent = isFullscreen() ? "전체 화면 끄기" : "전체 화면";
+    };
+    if (canFullscreen()) {
+      $("#fsBtn").hidden = false;
+      $("#fsBtn").addEventListener("click", async () => {
+        await toggleFullscreen();
+        paintFs();
+      });
+      document.addEventListener("fullscreenchange", paintFs);
+      document.addEventListener("webkitfullscreenchange", paintFs);
+      paintFs();
+    }
     $("#mvOnly").checked = !!prefs.get("site:mvOnly", false);
     $("#mvOnly").addEventListener("change", () => {
       prefs.set("site:mvOnly", $("#mvOnly").checked);
@@ -10151,7 +10196,6 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       }
       editor.stop();
       audio.unlock();
-      lockLandscape();
       cur.returnTo = "editor";
       cur.playOpts = from != null ? { from } : {};
       cur.playing = { test: true };
@@ -10170,7 +10214,6 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const s = getSong(songId);
       if (!s) return;
       const unlock = audio.unlock();
-      lockLandscape();
       cur.returnTo = "songView";
       cur.playOpts = {};
       cur.playing = { songId, diff, full: true, title: s.title };
