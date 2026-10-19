@@ -361,8 +361,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .guide{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .guide b{color:var(--fg)}
 /* ---------- 첫 화면 (A): TAP TO START ---------- */
-.ts{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer;container-type:size;background:#fff;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-.ts-scene{position:absolute;inset:0;background:#070914}
+.ts{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer;container-type:size;background:#000;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.ts-scene{position:absolute;inset:0;background:#000}
 .ts-photo{position:absolute;inset:0;background:60% 32%/cover no-repeat;opacity:0;transition:opacity .9s ease}
 .ts-photo.on{opacity:1;animation:ts-reveal 1.7s cubic-bezier(.2,.7,.2,1) both}
 .ts-shards{position:absolute;inset:0;pointer-events:none}
@@ -374,7 +374,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   background:linear-gradient(90deg,rgba(20,24,48,0),rgba(20,24,48,.55) 22%,rgba(20,24,48,.55) 78%,rgba(20,24,48,0));text-shadow:0 1px 4px rgba(0,0,0,.45);
   animation:ts-blink 1.6s ease-in-out 2.05s infinite}
 .ts-note{position:absolute;right:max(14px,2cqw);bottom:max(10px,2cqh);margin:0;font:600 max(10px,min(1cqw,2.4cqh)) var(--font-body);letter-spacing:.04em;color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.6);animation:ts-in .5s ease 1.5s both}
-.ts-white{position:absolute;inset:0;background:#fff;pointer-events:none;animation:ts-fade .9s ease .15s both}
+.ts-white{display:none}
 .ts.out{pointer-events:none;animation:ts-out .5s ease both}
 .ts.out .ts-tap span{animation:ts-hit .5s ease both}
 @keyframes ts-reveal{from{transform:scale(1.08);filter:blur(8px) brightness(1.25)}to{transform:none;filter:none}}
