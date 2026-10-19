@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<link rel="preload" as="image" href="title.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cosmic Princess Kaguya bamboo shoot stage, feat 168, 8000</title>
 <meta name="description" content="팬메이드 리듬게임 — 직접 만든 채보로 플레이해요.">
@@ -363,7 +364,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .ts{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer;container-type:size;background:#fff;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .ts-scene{position:absolute;inset:0;animation:ts-reveal 1.7s cubic-bezier(.2,.7,.2,1) both}
 .ts-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ts-photo{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.2s ease}
+.ts-photo{position:absolute;inset:0;background:60% 32%/cover no-repeat;opacity:0;transition:opacity 1.2s ease}
 .ts-photo.on{opacity:1}
 .ts-star{animation:ts-star 3.2s ease-in-out infinite}.ts-star.s1{animation-delay:-.8s}.ts-star.s2{animation-delay:-1.6s;animation-duration:4.1s}.ts-star.s3{animation-delay:-2.4s;animation-duration:2.6s}
 .ts-shards{position:absolute;inset:0;pointer-events:none}
@@ -4255,7 +4256,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     "JSON 형식이 올바르지 않아요.": ["The JSON is not valid.", "JSONの形式が正しくありません。"],
     "알 수 없는 채보 형식이에요. .sus 또는 .json 채보를 넣어 주세요.": ["Unknown chart format. Please use a .sus or .json chart.", "不明な譜面形式です。.sus か .json の譜面を入れてください。"],
     "첫 화면 (TAP TO START)": ["Title screen (TAP TO START)", "タイトル画面 (TAP TO START)"],
-    "사이트에 들어오면 먼저 나오는 화면의 배경 사진이에요. 가로로 긴 사진이 잘 어울려요. 사진이 없으면 달밤 대나무 숲 그림이 나와요.": ["The background photo of the screen shown first when someone opens the site. Wide photos look best. Without a photo, a moonlit bamboo forest is shown.", "サイトに入ると最初に出る画面の背景写真です。横長の写真がよく合います。写真がなければ月夜の竹林の絵が出ます。"],
+    "사이트에 들어오면 먼저 나오는 화면의 배경 사진이에요. 가로로 긴 사진이 잘 어울려요. 올린 사진이 없으면 기본 사진이 나와요.": ["The background photo of the screen shown first when someone opens the site. Wide photos look best. Without an uploaded photo, the default photo is shown.", "サイトに入ると最初に出る画面の背景写真です。横長の写真がよく合います。写真を入れていなければ基本の写真が出ます。"],
     "첫 화면 사진 고르기": ["Choose title photo", "タイトル写真を選ぶ"],
     "사진 빼기": ["Remove photo", "写真を外す"],
     "첫 화면 미리 보기": ["Preview title screen", "タイトル画面をプレビュー"],
@@ -8540,13 +8541,22 @@ ${left}${right}
       const root2 = document.documentElement.style;
       document.title = design.siteTitle;
       paintTitle($("#siteTitle"), design.siteTitle);
-      if (titleCtl && titleCtl.open) titleCtl.setImage(design.titleImage ? assetUrl(design.titleImage) : null);
+      if (titleCtl && titleCtl.open && designKnown) titleCtl.setImage(titleImageOf(design));
       $("#siteSub").textContent = design.siteSub;
       $("#siteSub").hidden = !design.siteSub;
       root2.setProperty("--accent", design.colors.accent);
       for (const k of ["tap", "flick", "trace", "slide"]) root2.setProperty("--c-" + k, design.colors[k]);
     }
     let titleCtl = null;
+    const DEFAULT_TITLE_IMG = "title.jpg";
+    const titleImageOf = (d) => d && d.titleImage ? assetUrl(d.titleImage) : DEFAULT_TITLE_IMG;
+    let designKnown = false;
+    setTimeout(() => {
+      if (!designKnown) {
+        designKnown = true;
+        if (titleCtl && titleCtl.open) titleCtl.setImage(titleImageOf(design));
+      }
+    }, 2500);
     const openTitle = (image, onStart) => {
       titleCtl = showTitle({ logo: LOGO_SVG + LOGO_FX, image, onStart });
       return titleCtl;
@@ -10377,7 +10387,7 @@ ${left}${right}
         "div",
         { class: "ds-sec" },
         el("h3", { text: "첫 화면 (TAP TO START)" }),
-        el("p", { class: "hint", text: "사이트에 들어오면 먼저 나오는 화면의 배경 사진이에요. 가로로 긴 사진이 잘 어울려요. 사진이 없으면 달밤 대나무 숲 그림이 나와요." })
+        el("p", { class: "hint", text: "사이트에 들어오면 먼저 나오는 화면의 배경 사진이에요. 가로로 긴 사진이 잘 어울려요. 올린 사진이 없으면 기본 사진이 나와요." })
       );
       if (store.canUpload) {
         put(tsSec, el(
@@ -10411,7 +10421,7 @@ ${left}${right}
         type: "button",
         id: "dsTitlePreview",
         text: "첫 화면 미리 보기",
-        onclick: () => openTitle(designer.design.titleImage ? assetUrl(designer.design.titleImage) : null, null)
+        onclick: () => openTitle(titleImageOf(designer.design), null)
       })));
       put(body, tsSec);
       const siteText = (id, label, key, max) => {
@@ -10464,6 +10474,7 @@ ${left}${right}
         toast("주인 계정이 아니라서 디자인 모드를 닫았어요.");
       }
       if (what === "design" && !(cur.screen === "design" && cur.dsDirty)) {
+        designKnown = true;
         applyDesign(store.design);
         if (cur.screen === "design") {
           designer.setDesign(design, assetUrl);
