@@ -4362,7 +4362,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     "채보 없음": ["No charts", "譜面なし"],
     "「{0}」을(를) 지울까요?": ["Delete “{0}”?", "「{0}」を削除しますか？"],
     "음악, 재킷, MV, 모든 난이도의 채보와 랭킹 기록이 함께 지워져요. 되돌릴 수 없어요.": ["The music, jacket, MV, charts for every difficulty and ranking records are all deleted. This cannot be undone.", "音楽、ジャケット、MV、すべての難易度の譜面とランキング記録が一緒に削除されます。元に戻せません。"],
-    "아직 올린 곡이 없어요. [+ 곡 추가]로 올려 보세요.": ["No songs uploaded yet. Use [+ Add song] to upload one.", "まだ曲がありません。[+ 楽曲を追加] でアップロードしてみましょう。"]
+    "아직 올린 곡이 없어요. [+ 곡 추가]로 올려 보세요.": ["No songs uploaded yet. Use [+ Add song] to upload one.", "まだ曲がありません。[+ 楽曲を追加] でアップロードしてみましょう。"],
+    "관리자 패널에서 음악 파일과 재킷 이미지를 올리면 난이도별로 채보를 만들 수 있어요.": ["Upload a music file and jacket image in the admin panel to make charts for each difficulty.", "管理者パネルで音楽ファイルとジャケット画像をアップロードすると、難易度ごとに譜面を作れます。"],
+    "곡이 올라오면 여기에 보여요.": ["Songs will show up here once they are uploaded.", "曲がアップロードされるとここに表示されます。"]
   };
 
   // src/i18n.js
@@ -8848,7 +8850,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const grid = $("#songGrid");
       grid.textContent = "";
       const mvOnly = $("#mvOnly").checked;
-      const list = [demo, ...store.songs].filter((s) => !mvOnly || s.video);
+      const list = store.songs.filter((s) => !mvOnly || s.video);
       for (const s of list) {
         const badges = [s.demo ? el("span", { class: "badge", text: "DEMO" }) : null, s.video ? el("span", { class: "badge mv", text: "MV" }) : null].filter(Boolean);
         const g = songBestGrade(s);
@@ -8871,11 +8873,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           "div",
           { class: "empty" },
           el("b", { text: "첫 곡을 올려 보세요" }),
-          el("span", { text: "음악 파일과 재킷 이미지를 올리면 난이도별로 채보를 만들 수 있어요." }),
-          el("button", { class: "btn primary small", type: "button", text: "+ 곡 추가", onclick: () => openSongForm(null) })
+          el("span", { text: "관리자 패널에서 음악 파일과 재킷 이미지를 올리면 난이도별로 채보를 만들 수 있어요." }),
+          el("button", { class: "btn primary small", type: "button", text: "관리자 패널", onclick: () => openAdmin() })
         ));
-      } else if (!store.songs.length && store.mode === "cloud") {
-        put(grid, el("div", { class: "empty" }, el("b", { text: "아직 올라온 곡이 없어요" }), el("span", { text: "곡이 올라오기 전까지 데모곡으로 연습해 보세요." })));
+      } else if (!list.length) {
+        put(grid, el("div", { class: "empty" }, el("b", { text: "아직 올라온 곡이 없어요" }), el("span", { text: "곡이 올라오면 여기에 보여요." })));
       }
     }
     $("#accountBtn").addEventListener("click", () => store.me || store.loggedIn ? openAccount() : openLogin(store.hasOwner ? "login" : "signup"));
