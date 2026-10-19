@@ -362,11 +362,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .guide b{color:var(--fg)}
 /* ---------- 첫 화면 (A): TAP TO START ---------- */
 .ts{position:fixed;inset:0;z-index:50;overflow:hidden;cursor:pointer;container-type:size;background:#fff;outline:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-.ts-scene{position:absolute;inset:0;animation:ts-reveal 1.7s cubic-bezier(.2,.7,.2,1) both}
-.ts-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ts-photo{position:absolute;inset:0;background:60% 32%/cover no-repeat;opacity:0;transition:opacity 1.2s ease}
-.ts-photo.on{opacity:1}
-.ts-star{animation:ts-star 3.2s ease-in-out infinite}.ts-star.s1{animation-delay:-.8s}.ts-star.s2{animation-delay:-1.6s;animation-duration:4.1s}.ts-star.s3{animation-delay:-2.4s;animation-duration:2.6s}
+.ts-scene{position:absolute;inset:0;background:#070914}
+.ts-photo{position:absolute;inset:0;background:60% 32%/cover no-repeat;opacity:0;transition:opacity .9s ease}
+.ts-photo.on{opacity:1;animation:ts-reveal 1.7s cubic-bezier(.2,.7,.2,1) both}
 .ts-shards{position:absolute;inset:0;pointer-events:none}
 .ts-shards i{position:absolute;width:var(--s);height:var(--s);background:var(--c);clip-path:polygon(50% 0,100% 100%,0 100%);opacity:0;animation:ts-shard var(--d) linear var(--dl) infinite;filter:drop-shadow(0 0 6px var(--c))}
 .ts-logo{--lw:min(46cqw,150cqh);position:absolute;left:50%;top:51cqh;width:var(--lw);transform:translateX(-50%);animation:ts-pop .75s cubic-bezier(.3,1.5,.5,1) .85s both;filter:drop-shadow(0 6px 18px rgba(10,20,60,.35))}
@@ -386,9 +384,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 @keyframes ts-blink{0%,100%{opacity:1}50%{opacity:.22}}
 @keyframes ts-hit{0%{opacity:1;transform:scale(1)}40%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1.08)}}
 @keyframes ts-out{0%{opacity:1}100%{opacity:0}}
-@keyframes ts-star{0%,100%{opacity:1}50%{opacity:.25}}
 @keyframes ts-shard{0%{opacity:0;transform:translateY(0) rotate(var(--r))}12%{opacity:.85}80%{opacity:.6}100%{opacity:0;transform:translateY(-38cqh) rotate(calc(var(--r) + 240deg))}}
-@media (prefers-reduced-motion:reduce){.ts-scene,.ts-logo,.ts-shards i,.ts-star{animation:none}.ts-shards{display:none}.ts-white{display:none}}
+@media (prefers-reduced-motion:reduce){.ts-photo.on,.ts-logo,.ts-shards i{animation:none}.ts-shards{display:none}.ts-white{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -4873,49 +4870,6 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 
   // src/title.js
   var SHARD_COLORS = ["#ffd23f", "#b07cff", "#7ff3e3", "#ff9fd0", "#8fd3ff", "#ffffff"];
-  function sceneSvg() {
-    const bamboo = (x, w, lean, tone, h0) => {
-      let out = "";
-      const n = 7;
-      for (let i = 0; i < n; i++) {
-        const y0 = h0 + (1e3 - h0) * i / n, y1 = h0 + (1e3 - h0) * (i + 1) / n - 6;
-        const x0 = x + lean * (y0 - h0), x1 = x + lean * (y1 - h0);
-        out += `<path d="M${x0 - w / 2},${y0} L${x0 + w / 2},${y0} L${x1 + w / 2},${y1} L${x1 - w / 2},${y1} Z" fill="${tone}"/>`;
-      }
-      return out;
-    };
-    const leaf = (x, y, l, a, tone) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M0,0 Q${l * 0.45},${-l * 0.22} ${l},0 Q${l * 0.45},${l * 0.22} 0,0 Z" fill="${tone}"/>`;
-    let left = "", right = "";
-    const far = "#24305e", near3 = "#141c3c";
-    left += bamboo(70, 26, 0.02, far, -40) + bamboo(190, 20, -0.015, far, 40) + bamboo(20, 40, 0.01, near3, -60) + bamboo(130, 34, -0.02, near3, 120);
-    left += leaf(150, 210, 90, -20, near3) + leaf(140, 230, 80, 30, near3) + leaf(40, 380, 100, 200, near3) + leaf(200, 120, 70, -40, far) + leaf(60, 160, 80, 160, far);
-    right += bamboo(1530, 28, -0.02, far, -30) + bamboo(1420, 20, 0.015, far, 60) + bamboo(1580, 42, -0.01, near3, -50) + bamboo(1470, 32, 0.02, near3, 100);
-    right += leaf(1460, 200, 90, 200, near3) + leaf(1470, 230, 80, 150, near3) + leaf(1560, 360, 100, -20, near3) + leaf(1400, 130, 70, 220, far) + leaf(1540, 150, 80, 20, far);
-    let stars = "";
-    let seed = 7;
-    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    for (let i = 0; i < 70; i++) {
-      const x = 240 + rnd() * 1120, y = rnd() * 520, r = 0.8 + rnd() * 2.2;
-      stars += `<circle class="ts-star s${i % 4}" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff"/>`;
-    }
-    return `<svg class="ts-svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-<defs>
-<linearGradient id="tsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1440"/><stop offset=".45" stop-color="#26357f"/><stop offset=".78" stop-color="#6f6cc0"/><stop offset="1" stop-color="#f0b6d2"/></linearGradient>
-<radialGradient id="tsMoonGlow"><stop offset="0" stop-color="#fffbea" stop-opacity=".8"/><stop offset=".38" stop-color="#e9e4ff" stop-opacity=".22"/><stop offset="1" stop-color="#c9d4ff" stop-opacity="0"/></radialGradient>
-<radialGradient id="tsMoon" cx=".4" cy=".35"><stop offset="0" stop-color="#fffdf0"/><stop offset=".7" stop-color="#ffefb0"/><stop offset="1" stop-color="#ffd86a"/></radialGradient>
-<linearGradient id="tsMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#ffe6f2" stop-opacity=".55"/></linearGradient>
-</defs>
-<rect width="1600" height="1000" fill="url(#tsSky)"/>
-${stars}
-<circle cx="800" cy="300" r="420" fill="url(#tsMoonGlow)"/>
-<circle cx="800" cy="300" r="150" fill="url(#tsMoon)"/>
-<circle cx="745" cy="270" r="22" fill="#f3d27a" opacity=".35"/><circle cx="850" cy="340" r="30" fill="#f3d27a" opacity=".3"/><circle cx="820" cy="230" r="12" fill="#f3d27a" opacity=".3"/>
-<path d="M0,820 Q400,760 800,800 T1600,780 L1600,1000 L0,1000 Z" fill="#3a3f86" opacity=".55"/>
-<path d="M0,880 Q500,830 900,870 T1600,860 L1600,1000 L0,1000 Z" fill="#232a62" opacity=".8"/>
-<rect y="640" width="1600" height="360" fill="url(#tsMist)"/>
-${left}${right}
-</svg>`;
-  }
   function showTitle(opts) {
     const root2 = document.createElement("div");
     root2.className = "ts";
@@ -4924,7 +4878,7 @@ ${left}${right}
     root2.setAttribute("tabindex", "0");
     root2.setAttribute("aria-label", "TAP TO START");
     root2.setAttribute("translate", "no");
-    root2.innerHTML = `<div class="ts-scene">${sceneSvg()}<div class="ts-photo"></div></div>
+    root2.innerHTML = `<div class="ts-scene"><div class="ts-photo"></div></div>
 <div class="ts-shards" aria-hidden="true"></div>
 <div class="ts-logo">${opts.logo}</div>
 <div class="ts-tap"><span>TAP TO START</span></div>
@@ -8556,7 +8510,7 @@ ${left}${right}
         designKnown = true;
         if (titleCtl && titleCtl.open) titleCtl.setImage(titleImageOf(design));
       }
-    }, 2500);
+    }, 1500);
     const openTitle = (image, onStart) => {
       titleCtl = showTitle({ logo: LOGO_SVG + LOGO_FX, image, onStart });
       return titleCtl;
