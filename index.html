@@ -231,7 +231,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 .seg button{min-height:36px;min-width:40px;padding:0 9px;border:0;background:var(--panel2);cursor:pointer;font-size:13px}
 .seg button+button{border-left:1px solid var(--line2)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
-.tool{width:54px;height:50px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:11px;border:1px solid var(--line2);background:var(--panel2);font-size:11px;cursor:pointer;padding:0}
+.tool{width:54px;height:50px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;line-height:1.05;text-align:center;border-radius:11px;border:1px solid var(--line2);background:var(--panel2);font-size:11px;cursor:pointer;padding:0}
 .tool[aria-pressed="true"]{border-color:var(--accent);background:rgba(255,255,255,.16)}
 .tool svg{width:34px;height:16px;display:block}
 .sep{width:1px;height:30px;background:var(--line2);flex:none}
@@ -631,6 +631,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       <button class="tool" type="button" data-tool="tap" aria-pressed="true"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="4" width="30" height="8" rx="4" fill="var(--c-tap,#38b6ff)" stroke="#0b2a55"/></svg>탭</button>
       <button class="tool" type="button" data-tool="flick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="7" width="30" height="8" rx="4" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/></svg>플릭</button>
       <button class="tool" type="button" data-tool="trace" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="6" width="30" height="5" rx="2.5" fill="var(--c-trace,#bfeeff)" stroke="#1b4a66"/></svg>트레이스</button>
+      <button class="tool" type="button" data-tool="traceFlick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="8" width="30" height="5" rx="2.5" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/><path d="M8 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M16 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M24 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z" fill="#5c0a2d"/></svg>트레이스 플릭</button>
       <button class="tool" type="button" data-tool="slide" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M3 15 L14 15 L31 1 L20 1 Z" fill="var(--c-slide,#33dc8a)" fill-opacity=".45"/><rect x="2" y="11" width="13" height="5" rx="2.5" fill="var(--c-slide,#33dc8a)"/></svg>슬라이드</button>
       <button class="tool" type="button" data-tool="erase" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M10 13 L18 3 L25 8 L19 15 L13 15 Z" fill="#bdbdbd"/><path d="M8 15.5 H27" stroke="#f4f4f4" stroke-width="1"/></svg>지우개</button>
     </div>
@@ -705,6 +706,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
 (() => {
   // ../shared/chart.js
   var LANES = 12;
+  var BEND_MAX = 6;
   var COMBO_CAP = 30;
   var EASES = ["linear", "in", "out"];
   var DIRS = ["up", "left", "right"];
@@ -753,6 +755,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         const o = { type: n.type, beat: r6(beat), lane, width };
         if (n.critical) o.critical = true;
         if (n.type === "flick") o.dir = DIRS.includes(n.dir) ? n.dir : "up";
+        if (n.type === "flick" && n.trace) o.trace = true;
         notes.push(o);
       } else if (n.type === "slide") {
         const pts = (Array.isArray(n.points) ? n.points : []).filter((p) => p && typeof p === "object" && okBeat(+p.beat)).slice().sort((a, b) => +a.beat - +b.beat);
@@ -770,6 +773,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           const first = i === 0;
           const last = i === clean.length - 1;
           if (!last && EASES.includes(p.ease) && p.ease !== "linear") q.ease = p.ease;
+          const bend = Math.round(Math.min(BEND_MAX, Math.max(-BEND_MAX, +p.bend || 0)) * 4) / 4;
+          if (!last && bend) q.bend = bend;
           if (!first && !last && p.tick === false) q.tick = false;
           if (first && p.trace) q.trace = true;
           if (last && DIRS.includes(p.flick)) q.flick = p.flick;
@@ -846,10 +851,45 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     }
     s._seg = i;
     const span = b.t - a.t;
-    const p = easeP(a.ease, span > 0 ? (t - a.t) / span : 1);
-    out[0] = a.l + (b.l - a.l) * p;
-    out[1] = a.r + (b.r - a.r) * p;
+    const lin = span > 0 ? (t - a.t) / span : 1;
+    const p = easeP(a.ease, lin);
+    const bo = a.bend ? a.bend * 4 * lin * (1 - lin) : 0;
+    out[0] = a.l + (b.l - a.l) * p + bo;
+    out[1] = a.r + (b.r - a.r) * p + bo;
     return out;
+  }
+  function slideJoints(slides) {
+    const n = slides.length;
+    const hideHead = new Array(n).fill(false), hideTail = new Array(n).fill(false);
+    const ov = (a, b) => a.lane < b.lane + b.width && b.lane < a.lane + a.width;
+    const same = (a, b) => Math.abs(a.beat - b.beat) < 1e-6 && ov(a, b);
+    const first = (s) => s.points[0], last = (s) => s.points[s.points.length - 1];
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const A = slides[i], B = slides[j];
+        if (A.points.length < 2 || B.points.length < 2) continue;
+        if (!last(A).flick && same(last(A), first(B))) {
+          hideTail[i] = true;
+          hideHead[j] = true;
+          continue;
+        }
+        if (i < j && same(last(A), last(B))) {
+          if (last(B).flick && !last(A).flick) hideTail[i] = true;
+          else hideTail[j] = true;
+        }
+        if (!hideHead[j]) {
+          for (let k = 0; k < A.points.length - 1; k++) {
+            if (k === 0 && j < i) continue;
+            if (same(A.points[k], first(B))) {
+              hideHead[j] = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    return { hideHead, hideTail };
   }
   function compileChart(chart) {
     const timer = makeTimer(chart.bpms, chart.offset);
@@ -871,6 +911,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           l: p.lane,
           r: p.lane + p.width,
           ease: p.ease || "linear",
+          bend: p.bend || 0,
           tick: i > 0 && i < P.length - 1 && p.tick !== false
         }));
         const last2 = P[P.length - 1];
@@ -893,7 +934,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         const t = T2(n.beat);
         const o = {
           id: nid++,
-          kind: n.type,
+          kind: n.type === "flick" && n.trace ? "traceFlick" : n.type,
           crit: !!n.critical,
           t,
           beat: n.beat,
@@ -901,11 +942,28 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           r: n.lane + n.width,
           dir: n.type === "flick" ? n.dir || "up" : null
         };
-        o.el = mk(n.type, t, o.crit, o);
+        o.el = mk(o.kind, t, o.crit, o);
         notes.push(o);
       }
     }
-    const order = { head: 0, tap: 0, flick: 0, trace: 0, tick: 1, tail: 2, tailFlick: 2 };
+    const slideNotes = chart.notes.filter((n) => n.type === "slide");
+    const sl = notes.filter((n) => n.kind === "slide");
+    const J = slideJoints(slideNotes);
+    sl.forEach((s, i) => {
+      if (J.hideHead[i]) {
+        s.head.ghost = true;
+        s.hideHead = true;
+      }
+      if (J.hideTail[i]) {
+        s.tail.ghost = true;
+        s.hideTail = true;
+      }
+    });
+    for (let i = els.length - 1; i >= 0; i--) if (els[i].ghost) {
+      els[i].j = 0;
+      els.splice(i, 1);
+    }
+    const order = { head: 0, tap: 0, flick: 0, trace: 0, traceFlick: 0, tick: 1, tail: 2, tailFlick: 2 };
     els.sort((a, b) => a.t - b.t || order[a.kind] - order[b.kind]);
     els.forEach((e, i) => {
       e.i = i;
@@ -1932,6 +1990,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     flick: [0.06, 0.09, 0.115, 0.13],
     release: [0.06, 0.09, 0.115, 0.13]
   };
+  var TRACE_FLICK = { early: 0.2, late: 0.2 };
   var RATE = [1, 0.85, 0.5, 0.25, 0];
   var TOL_TAP = 0.75;
   var TOL_NOTE = 1;
@@ -2075,10 +2134,35 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           }
         }
       }
-      if (!best) return null;
+      if (!best) {
+        const tf = this._traceFlickAt(tc, t);
+        if (tf) {
+          this._judge(tf, PERFECT, 0);
+          return tf;
+        }
+        return null;
+      }
       this._timed(best, t, WIN.flick);
       if (tc.flickNote === best) tc.flickNote = null;
       return best;
+    }
+    // 닿은 채로 움직임이 감지되면 호출 (튕기기보다 작은 움직임도 됨) → 트레이스 플릭
+    motion(id, t) {
+      const tc = this.touches.get(id);
+      if (!tc || this.auto) return null;
+      const e = this._traceFlickAt(tc, t);
+      if (e) this._judge(e, PERFECT, 0);
+      return e;
+    }
+    _traceFlickAt(tc, t) {
+      const els = this.c.els;
+      for (let i = this.lo; i < els.length; i++) {
+        const e = els[i];
+        if (e.t > t + TRACE_FLICK.early) break;
+        if (e.j >= 0 || e.kind !== "traceFlick" || t - e.t > TRACE_FLICK.late) continue;
+        if (overlaps(tc, e.note.l, e.note.r, TOL_NOTE)) return e;
+      }
+      return null;
     }
     // cancel: 손가락을 뗀 게 아니라 브라우저가 터치를 놓친 경우(pointercancel)
     touchUp(id, t, cancel = false) {
@@ -2129,6 +2213,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           if (dt > WIN.tap[3]) this._judge(e, MISS, 0);
         } else if (e.kind === "flick") {
           if (dt > WIN.flick[3]) this._judge(e, MISS, 0);
+        } else if (e.kind === "traceFlick") {
+          let keyOn = false;
+          if (dt >= -0.03) {
+            for (const tc of this.touches.values()) if (tc.kind === "key" && overlaps(tc, e.note.l, e.note.r, 0)) keyOn = true;
+          }
+          if (keyOn) this._judge(e, PERFECT, 0);
+          else if (dt > TRACE_FLICK.late) this._judge(e, MISS, 0);
         } else if (e.kind === "trace" || e.kind === "head") {
           const n = e.note;
           const l = e.kind === "head" ? n.pts[0].l : n.l;
@@ -2187,7 +2278,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           this._judge(tail, MISS, 0);
         }
       }
-      if (tail.j >= 0 && s.head.j >= 0 && s.ticks.every((e) => e.j >= 0)) {
+      if (tail.j >= 0 && s.head.j >= 0 && s.ticks.every((e) => e.j >= 0) && (!tail.ghost || t >= s.t1)) {
         s.done = true;
         s.held = false;
         for (const id of s.holders) {
@@ -2202,6 +2293,9 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const r = slideRangeAt(s, ta, this._rng);
       let lo = r[0], hi = r[1];
       slideRangeAt(s, tb, r);
+      if (r[0] < lo) lo = r[0];
+      if (r[1] > hi) hi = r[1];
+      slideRangeAt(s, (ta + tb) / 2, r);
       if (r[0] < lo) lo = r[0];
       if (r[1] > hi) hi = r[1];
       for (const p of s.pts) {
@@ -2225,7 +2319,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         if (t >= s.t0 && t < s.t1) s.holders.add("auto");
         else s.holders.delete("auto");
         s.held = s.holders.size > 0;
-        if (s.tail.j >= 0) {
+        if (s.tail.j >= 0 && (!s.tail.ghost || t >= s.t1)) {
           s.done = true;
           s.held = false;
           s.holders.clear();
@@ -2419,7 +2513,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   }
   function pickStyle(styles, kind, crit) {
     if (crit) return styles.crit;
-    if (kind === "flick" || kind === "tailFlick") return styles.flick;
+    if (kind === "flick" || kind === "tailFlick" || kind === "traceFlick") return styles.flick;
     if (kind === "trace") return styles.trace;
     if (kind === "head" || kind === "tick" || kind === "tail" || kind === "slide") return styles.slide;
     return styles.tap;
@@ -2942,6 +3036,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         this._bar(l, r, z, style, true, a);
         return;
       }
+      if (kind === "traceFlick") {
+        this._bar(l, r, z, style, true, a);
+        this._arrow(l, r, z, dir || "up", style, now2, a);
+        return;
+      }
       this._bar(l, r, z, style, false, a);
       if (crit && !this.reduced) this._sparkle(l, r, z, now2, a);
       if (kind === "flick" || kind === "tailFlick") this._arrow(l, r, z, dir || "up", style, now2, a);
@@ -3453,7 +3552,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var approachTime = (speed) => 4 * Math.pow(0.82, speed - 1) * LANE_LONGER;
   var FLOWS = { even: 0, sekai: 1, deep: 2 };
   var flowOf = (key) => key in FLOWS ? FLOWS[key] : FLOWS.even;
-  var seKind = (e) => e.crit ? "crit" : e.kind === "flick" || e.kind === "tailFlick" ? "flick" : e.kind === "tick" ? "tick" : e.kind === "trace" ? "trace" : "tap";
+  var seKind = (e) => e.crit ? "crit" : e.kind === "flick" || e.kind === "tailFlick" || e.kind === "traceFlick" ? "flick" : e.kind === "tick" ? "tick" : e.kind === "trace" ? "trace" : "tap";
   var isTyping = (el2) => el2 && el2.closest && el2.closest("input,textarea,select,[contenteditable]");
   function elRange(e) {
     const n = e.note;
@@ -3724,7 +3823,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const [x, y] = this._xy(e);
       const ms = this._evMs(e);
       const u = this.r.laneAt(x, y);
-      this.ptrs.set(e.pointerId, { u, hist: [{ ms, x, y }], armed: true });
+      this.ptrs.set(e.pointerId, { u, hist: [{ ms, x, y }], armed: true, mx: x, my: y });
       this.judge.touchDown(e.pointerId, this._songT(ms), u, u, "touch");
     }
     _pmove(e) {
@@ -3744,6 +3843,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         this.judge.touchMove(e.pointerId, t, p.u, p.u);
         const h0 = p.hist[0];
         const dist = this._flickDist(e.pointerId, x - h0.x, y - h0.y, t);
+        if (Math.hypot(x - p.mx, y - p.my) >= thr * 0.45) {
+          p.mx = x;
+          p.my = y;
+          this.judge.motion(e.pointerId, t);
+        }
         if (p.armed) {
           if (dist >= thr) {
             this.judge.flick(e.pointerId, t);
@@ -4411,7 +4515,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     "홈": ["Home", "ホーム"],
     "메뉴": ["Menu", "メニュー"],
     "라이브": ["Live", "ライブ"],
-    "초 카구야 공주! 갤러리 (디시인사이드)": ["Cosmic Princess Kaguya! gallery (DC Inside)", "超かぐや姫！ギャラリー (DC Inside)"]
+    "초 카구야 공주! 갤러리 (디시인사이드)": ["Cosmic Princess Kaguya! gallery (DC Inside)", "超かぐや姫！ギャラリー (DC Inside)"],
+    "트레이스 플릭": ["Trace flick", "トレースフリック"],
+    "휘기": ["Bend", "曲げ"],
+    "왼쪽으로 휘기": ["Bend left", "左に曲げる"],
+    "오른쪽으로 휘기": ["Bend right", "右に曲げる"],
+    "곧게": ["Straighten", "まっすぐ"]
   };
 
   // src/i18n.js
@@ -6432,7 +6541,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     return parts;
   }
   var near = (a, b) => Math.abs(a - b) < 1e-6;
-  var seKind2 = (e) => e.crit ? "crit" : e.kind === "flick" || e.kind === "tailFlick" ? "flick" : e.kind === "tick" ? "tick" : e.kind === "trace" ? "trace" : "tap";
+  var seKind2 = (e) => e.crit ? "crit" : e.kind === "flick" || e.kind === "tailFlick" || e.kind === "traceFlick" ? "flick" : e.kind === "tick" ? "tick" : e.kind === "trace" ? "trace" : "tap";
   var REC_KEYS = { KeyS: 1, KeyD: 3, KeyF: 5, KeyJ: 7, KeyK: 9, KeyL: 11 };
   function rr2(g, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -6644,7 +6753,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     // 슬라이드 경로 (시간 기준 곡선, 게임과 똑같이)
     _spath(n) {
       return {
-        pts: n.points.map((p) => ({ t: this.timer.beatToTime(p.beat), l: p.lane, r: p.lane + p.width, ease: p.ease || "linear" })),
+        pts: n.points.map((p) => ({ t: this.timer.beatToTime(p.beat), l: p.lane, r: p.lane + p.width, ease: p.ease || "linear", bend: p.bend || 0 })),
         _seg: 0
       };
     }
@@ -6725,9 +6834,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     }
     // ---------- 편집 동작 ----------
     _addNote(type, beat, lane, width) {
-      const n = { type, beat, lane, width };
+      const tf = type === "traceFlick";
+      const n = { type: tf ? "flick" : type, beat, lane, width };
       if (this.crit) n.critical = true;
-      if (type === "flick") n.dir = this.dir;
+      if (tf || type === "flick") n.dir = this.dir;
+      if (tf) n.trace = true;
       this.notes.push(this._withId(n));
       return n;
     }
@@ -6788,9 +6899,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const n = s.note;
       if (n.type !== "slide") {
         if (key === "type") {
-          n.type = value;
-          if (value === "flick") n.dir = n.dir || this.dir;
+          const tf = value === "traceFlick";
+          n.type = tf ? "flick" : value;
+          if (n.type === "flick") n.dir = n.dir || this.dir;
           else delete n.dir;
+          if (tf) n.trace = true;
+          else delete n.trace;
         } else if (key === "critical") {
           if (value) n.critical = true;
           else delete n.critical;
@@ -6809,6 +6923,10 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         } else if (key === "ease" && p && !isLast) {
           if (value === "linear") delete p.ease;
           else p.ease = value;
+        } else if (key === "bend" && p && !isLast) {
+          const b = Math.round(clamp3(+value || 0, -BEND_MAX, BEND_MAX) * 4) / 4;
+          if (b) p.bend = b;
+          else delete p.bend;
         } else if (key === "tick" && p && s.pt > 0 && !isLast) {
           if (value) delete p.tick;
           else p.tick = false;
@@ -7052,9 +7170,24 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       }
     }
     // 화면 좌표의 노트 찾기 (노트·점 우선, 그다음 슬라이드 몸통)
+    // 선택한 슬라이드 점 → 다음 점까지 구간 가운데의 '휘기 손잡이' 위치
+    bendHandle() {
+      const s = this.selection();
+      if (!s || s.note.type !== "slide" || s.pt == null || s.pt >= s.note.points.length - 1) return null;
+      const n = s.note, a = n.points[s.pt], b = n.points[s.pt + 1];
+      const beat = (a.beat + b.beat) / 2;
+      const tm = (this.timer.beatToTime(a.beat) + this.timer.beatToTime(b.beat)) / 2;
+      const bm = this.timer.timeToBeat(tm);
+      const r = slideRangeAt(this._spath(n), tm, [0, 0]);
+      return { note: n, pt: s.pt, beat: bm, u: (r[0] + r[1]) / 2, x: this.X((r[0] + r[1]) / 2), y: this.Y(bm), mid: beat };
+    }
     hitTest(x, y) {
       const tolY = Math.max(13, this.nh * 0.95);
       const u = this.uAt(x);
+      if (!this.readOnly) {
+        const bh = this.bendHandle();
+        if (bh && Math.hypot(x - bh.x, y - bh.y) <= 16) return { note: bh.note, pt: bh.pt, part: "bend" };
+      }
       let best = null, bestD = Infinity;
       const check = (note, pt, beat2, lane, width) => {
         const dy = Math.abs(y - this.Y(beat2));
@@ -7160,6 +7293,14 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       p.mode = "drag";
       p.before = JSON.stringify(h.note);
       p.drag = { part: h.part, note: h.note, pt: h.pt, body: !!h.body, orig: JSON.parse(JSON.stringify(h.note)), beat0: this.beatAt(p.y0), u0: this.uAt(p.x0) };
+      if (h.part === "bend") {
+        const n = h.note, a = n.points[h.pt], b = n.points[h.pt + 1];
+        const tm = (this.timer.beatToTime(a.beat) + this.timer.beatToTime(b.beat)) / 2;
+        const sp = this._spath(n);
+        sp.pts[h.pt].bend = 0;
+        const r = slideRangeAt(sp, tm, [0, 0]);
+        p.drag.c0 = (r[0] + r[1]) / 2;
+      }
     }
     _dragTo(p) {
       const d = p.drag, n = d.note, o = d.orig;
@@ -7187,6 +7328,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           n.beat = Math.max(0, this.snapB(o.beat + dBeat));
           n.lane = clamp3(o.lane + du, 0, LANES - o.width);
         }
+      } else if (d.part === "bend") {
+        const pt = n.points[d.pt];
+        const b = Math.round(clamp3(u - d.c0, -BEND_MAX, BEND_MAX) * 2) / 2;
+        if (b) pt.bend = b;
+        else delete pt.bend;
+        this.onSelect(this.selection());
       } else if (d.pt != null && !d.body) {
         const P = n.points, op = o.points[d.pt], pt = P[d.pt];
         if (!pt) return;
@@ -7355,6 +7502,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         g.lineWidth = n === active ? 2 : 1.4;
         g.stroke();
       }
+      const slidesNow = this.notes.filter((n) => n.type === "slide");
+      const joints = slideJoints(slidesNow);
+      const jHead = /* @__PURE__ */ new Set(), jTail = /* @__PURE__ */ new Set();
+      slidesNow.forEach((n, i) => {
+        if (joints.hideHead[i]) jHead.add(n);
+        if (joints.hideTail[i]) jTail.add(n);
+      });
       for (const n of this.notes) {
         if (n.type === "slide") {
           const P = n.points;
@@ -7364,7 +7518,16 @@ details.box[open]>summary::before{transform:rotate(45deg)}
             const y = this.Y(p.beat);
             if (y < -30 || y > H + 30) return;
             const first = i === 0, last = i === P.length - 1 && P.length > 1;
-            if (first || last) {
+            if (first && jHead.has(n) || last && jTail.has(n)) {
+              const r = sp ? this.rangeAtBeat(n, p.beat, sp) : [p.lane, p.lane + p.width];
+              g.beginPath();
+              g.arc(this.X((r[0] + r[1]) / 2), y, 5, 0, Math.PI * 2);
+              g.fillStyle = `rgb(${st.rgb})`;
+              g.fill();
+              g.strokeStyle = "#ffffff";
+              g.lineWidth = 1.5;
+              g.stroke();
+            } else if (first || last) {
               const crit = n.critical || last && p.critical;
               const s2 = last && p.flick ? crit ? S.crit : S.flick : crit ? S.crit : S.slide;
               this._bar(p.lane, p.width, y, s2, first && p.trace);
@@ -7384,18 +7547,19 @@ details.box[open]>summary::before{transform:rotate(45deg)}
             } else {
               this._diamond(this.X(p.lane + p.width / 2), y, st);
             }
-            if (p.ease && !last) {
+            if ((p.ease || p.bend) && !last) {
               g.fillStyle = "rgba(255,255,255,0.85)";
               g.font = '700 10px "IBM Plex Sans KR",system-ui,sans-serif';
               g.textAlign = "left";
-              g.fillText(tr(p.ease === "in" ? "가속" : "감속"), this.X(p.lane + p.width) + 4, y - 9);
+              const tags = [p.ease ? tr(p.ease === "in" ? "가속" : "감속") : null, p.bend ? (p.bend < 0 ? "◀ " : "▶ ") + Math.abs(p.bend) : null].filter(Boolean).join(" · ");
+              g.fillText(tags, this.X(p.lane + p.width) + 4, y - 9);
             }
           });
         } else {
           const y = this.Y(n.beat);
           if (y < -30 || y > H + 30) continue;
           const st = pickStyle(S, n.type, n.critical);
-          this._bar(n.lane, n.width, y, st, n.type === "trace");
+          this._bar(n.lane, n.width, y, st, n.type === "trace" || n.type === "flick" && n.trace);
           if (n.type === "flick") this._arrow(this.X(n.lane + n.width / 2), y, n.width, n.dir || "up", st);
         }
       }
@@ -7416,6 +7580,37 @@ details.box[open]>summary::before{transform:rotate(45deg)}
             g.fill();
           }
         }
+      }
+      const bh = !this.readOnly ? this.bendHandle() : null;
+      if (bh && bh.y > -20 && bh.y < H + 20) {
+        g.strokeStyle = "rgba(255,255,255,0.55)";
+        g.lineWidth = 1;
+        g.setLineDash([3, 3]);
+        g.beginPath();
+        g.moveTo(this.X(0), bh.y);
+        g.lineTo(this.X(LANES), bh.y);
+        g.stroke();
+        g.setLineDash([]);
+        g.beginPath();
+        g.arc(bh.x, bh.y, 9, 0, Math.PI * 2);
+        g.fillStyle = "#ffffff";
+        g.fill();
+        g.strokeStyle = "#000000";
+        g.lineWidth = 2;
+        g.stroke();
+        g.fillStyle = "#000000";
+        g.beginPath();
+        g.moveTo(bh.x - 6, bh.y);
+        g.lineTo(bh.x - 2, bh.y - 3.5);
+        g.lineTo(bh.x - 2, bh.y + 3.5);
+        g.closePath();
+        g.fill();
+        g.beginPath();
+        g.moveTo(bh.x + 6, bh.y);
+        g.lineTo(bh.x + 2, bh.y - 3.5);
+        g.lineTo(bh.x + 2, bh.y + 3.5);
+        g.closePath();
+        g.fill();
       }
       g.fillStyle = "#ffffff";
       g.fillRect(x0 - 6, this.yP - (this.recording ? 2 : 1), (this.WV ? this.xw + this.WV + 4 : x1 + 6) - (x0 - 6), this.recording ? 4 : 2);
@@ -9922,7 +10117,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     function syncToolbar() {
       for (const b of document.querySelectorAll("#edBar .tool")) b.setAttribute("aria-pressed", String(b.dataset.tool === editor.tool));
       $("#edCrit").setAttribute("aria-pressed", String(editor.crit));
-      $("#edDir").hidden = editor.tool !== "flick";
+      $("#edDir").hidden = editor.tool !== "flick" && editor.tool !== "traceFlick";
       for (const b of document.querySelectorAll("#edDir button")) b.setAttribute("aria-pressed", String(b.dataset.dir === editor.dir));
       $("#edWOut").textContent = editor.width;
       $("#edSnapOut").textContent = "1/" + editor.snap;
@@ -9980,7 +10175,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       if (n.type !== "slide") {
         put(
           box,
-          segOf([["tap", "탭"], ["flick", "플릭"], ["trace", "트레이스"]], n.type, (v) => set("type", v)),
+          segOf([["tap", "탭"], ["flick", "플릭"], ["trace", "트레이스"], ["traceFlick", "트레이스 플릭"]], n.type === "flick" && n.trace ? "traceFlick" : n.type, (v) => set("type", v)),
           el("button", { class: "btn small", type: "button", text: "크리티컬", "aria-pressed": String(!!n.critical), onclick: () => set("critical", !n.critical) }),
           n.type === "flick" ? segOf([["left", "↖", "왼쪽 위"], ["up", "↑", "위"], ["right", "↗", "오른쪽 위"]], n.dir || "up", (v) => set("dir", v)) : null,
           widthOf(n.width, (w) => set("width", w)),
@@ -10010,6 +10205,21 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       );
       if (!first && !last) put(box, segOf([[true, "중계점"], [false, "숨김"]], p.tick !== false, (v) => set("tick", v)));
       if (!last) put(box, el("span", { class: "lbl", text: "곡선" }), segOf([["linear", "직선"], ["in", "가속"], ["out", "감속"]], p.ease || "linear", (v) => set("ease", v)));
+      if (!last) {
+        const bv = p.bend || 0;
+        put(
+          box,
+          el("span", { class: "lbl", text: "휘기" }),
+          el(
+            "div",
+            { class: "mini bend" },
+            el("button", { type: "button", "aria-label": "왼쪽으로 휘기", text: "◀", onclick: () => set("bend", bv - 0.5) }),
+            el("output", { id: "edBendOut", text: bv === 0 ? "0" : (bv < 0 ? "◀ " : "▶ ") + Math.abs(bv) }),
+            el("button", { type: "button", "aria-label": "오른쪽으로 휘기", text: "▶", onclick: () => set("bend", bv + 0.5) })
+          ),
+          bv ? el("button", { class: "btn small", type: "button", text: "곧게", onclick: () => set("bend", 0) }) : null
+        );
+      }
       if (last) {
         put(box, el("span", { class: "lbl", text: "끝" }), segOf([[null, "그냥"], ["up", "↑", "위로 플릭"], ["left", "↖", "왼쪽 위로 플릭"], ["right", "↗", "오른쪽 위로 플릭"]], p.flick || null, (v) => set("flick", v)));
         if (!n.critical) put(box, el("button", { class: "btn small", type: "button", text: "끝만 크리티컬", "aria-pressed": String(!!p.critical), onclick: () => set("endCrit", !p.critical) }));
