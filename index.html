@@ -1985,7 +1985,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var GOOD = 2;
   var BAD = 3;
   var MISS = 4;
-  var JUDGE_SCALE = 2;
+  var JUDGE_SCALE = 1.5;
   var win = (a) => a.map((v) => Math.round(v * JUDGE_SCALE * 1e3) / 1e3);
   var WIN = {
     tap: win([0.045, 0.085, 0.11, 0.13]),
@@ -2001,7 +2001,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var HOLD_LAG = 0.1;
   var HOLD_LEAD = 0.05;
   var HOLD_GRACE = 0.12;
-  var LATE_WAIT = 0.12;
+  var LATE_WAIT = 0.09;
   var overlaps = (tc, l, r, tol) => tc.ur + tol > l + 1e-6 && tc.ul - tol < r - 1e-6;
   var centerDist = (tc, l, r) => Math.abs((tc.ul + tc.ur) / 2 - (l + r) / 2);
   var Judge = class {
@@ -2072,7 +2072,6 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       for (let i = this.lo; i < els.length; i++) {
         const e = els[i];
         if (e.t > t + WIN.flick[3]) break;
-        if (best && e.t > best.t + 1e-4) break;
         if (e.j >= 0 || e.claim != null) continue;
         if (e.kind !== "tap" && e.kind !== "flick" && e.kind !== "head") continue;
         if (e.kind === "head" && e.note.traceHead) continue;
@@ -2083,8 +2082,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         const r = e.kind === "head" ? n.pts[0].r : n.r;
         const tol = kind === "key" ? 0 : e.kind === "tap" ? TOL_TAP : TOL_NOTE;
         if (!overlaps(tc, l, r, tol)) continue;
-        const d = centerDist(tc, l, r);
-        if (!best || d < bestD) {
+        const d = Math.abs(t - e.t) + centerDist(tc, l, r) * 4e-3;
+        if (!best || d < bestD - 1e-9) {
           best = e;
           bestD = d;
         }
