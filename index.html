@@ -628,11 +628,11 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     <div class="ed-bottom">
     <div class="ed-tools" id="edBar">
       <button class="tool" type="button" data-tool="select" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M13 1 L13 15 L17 11 L20 15.5 L22 14.5 L19 10 L24 10 Z" fill="#f4f4f4"/></svg>선택</button>
-      <button class="tool" type="button" data-tool="tap" aria-pressed="true"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="4" width="30" height="8" rx="4" fill="var(--c-tap,#38b6ff)" stroke="#0b2a55"/></svg>탭</button>
-      <button class="tool" type="button" data-tool="flick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="7" width="30" height="8" rx="4" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/></svg>플릭</button>
-      <button class="tool" type="button" data-tool="trace" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="6" width="30" height="5" rx="2.5" fill="var(--c-trace,#bfeeff)" stroke="#1b4a66"/></svg>트레이스</button>
-      <button class="tool" type="button" data-tool="traceFlick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="8" width="30" height="5" rx="2.5" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/><path d="M8 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M16 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M24 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z" fill="#5c0a2d"/></svg>트레이스 플릭</button>
-      <button class="tool" type="button" data-tool="slide" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M3 15 L14 15 L31 1 L20 1 Z" fill="var(--c-slide,#33dc8a)" fill-opacity=".45"/><rect x="2" y="11" width="13" height="5" rx="2.5" fill="var(--c-slide,#33dc8a)"/></svg>슬라이드</button>
+      <button class="tool" type="button" data-tool="tap" aria-pressed="true"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="4" width="30" height="8" rx="1.2" fill="var(--c-tap,#38b6ff)" stroke="#0b2a55"/></svg>탭</button>
+      <button class="tool" type="button" data-tool="flick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="7" width="30" height="8" rx="1.2" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/></svg>플릭</button>
+      <button class="tool" type="button" data-tool="trace" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="2" y="6" width="30" height="5" rx="1" fill="var(--c-trace,#bfeeff)" stroke="#1b4a66"/></svg>트레이스</button>
+      <button class="tool" type="button" data-tool="traceFlick" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M17 0 L22 5 L12 5 Z" fill="var(--c-flick,#ff5596)" stroke="#fff" stroke-width=".8"/><rect x="2" y="8" width="30" height="5" rx="1" fill="var(--c-flick,#ff5596)" stroke="#5c0a2d"/><path d="M8 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M16 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z M24 10.5 l1.5-1.5 1.5 1.5-1.5 1.5z" fill="#5c0a2d"/></svg>트레이스 플릭</button>
+      <button class="tool" type="button" data-tool="slide" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M3 15 L14 15 L31 1 L20 1 Z" fill="var(--c-slide,#33dc8a)" fill-opacity=".45"/><rect x="2" y="11" width="13" height="5" rx="1" fill="var(--c-slide,#33dc8a)"/></svg>슬라이드</button>
       <button class="tool" type="button" data-tool="erase" aria-pressed="false"><svg viewBox="0 0 34 16" aria-hidden="true"><path d="M10 13 L18 3 L25 8 L19 15 L13 15 Z" fill="#bdbdbd"/><path d="M8 15.5 H27" stroke="#f4f4f4" stroke-width="1"/></svg>지우개</button>
     </div>
     <div class="ed-opts">
@@ -1985,10 +1985,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var GOOD = 2;
   var BAD = 3;
   var MISS = 4;
+  var JUDGE_SCALE = 2;
+  var win = (a) => a.map((v) => Math.round(v * JUDGE_SCALE * 1e3) / 1e3);
   var WIN = {
-    tap: [0.045, 0.085, 0.11, 0.13],
-    flick: [0.06, 0.09, 0.115, 0.13],
-    release: [0.06, 0.09, 0.115, 0.13]
+    tap: win([0.045, 0.085, 0.11, 0.13]),
+    flick: win([0.06, 0.09, 0.115, 0.13]),
+    release: win([0.06, 0.09, 0.115, 0.13])
   };
   var TRACE_FLICK = { early: 0.2, late: 0.2 };
   var RATE = [1, 0.85, 0.5, 0.25, 0];
@@ -1999,7 +2001,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var HOLD_LAG = 0.1;
   var HOLD_LEAD = 0.05;
   var HOLD_GRACE = 0.12;
-  var LATE_WAIT = 0.06;
+  var LATE_WAIT = 0.12;
   var overlaps = (tc, l, r, tol) => tc.ur + tol > l + 1e-6 && tc.ul - tol < r - 1e-6;
   var centerDist = (tc, l, r) => Math.abs((tc.ul + tc.ur) / 2 - (l + r) / 2);
   var Judge = class {
@@ -2074,8 +2076,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         if (e.j >= 0 || e.claim != null) continue;
         if (e.kind !== "tap" && e.kind !== "flick" && e.kind !== "head") continue;
         if (e.kind === "head" && e.note.traceHead) continue;
-        const win = e.kind === "flick" ? WIN.flick : WIN.tap;
-        if (Math.abs(t - e.t) > win[3]) continue;
+        const win2 = e.kind === "flick" ? WIN.flick : WIN.tap;
+        if (Math.abs(t - e.t) > win2[3]) continue;
         const n = e.note;
         const l = e.kind === "head" ? n.pts[0].l : n.l;
         const r = e.kind === "head" ? n.pts[0].r : n.r;
@@ -2335,10 +2337,10 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       for (const tc of this.touches.values()) if (overlaps(tc, l, r, tc.kind === "key" ? 0 : tol)) return true;
       return false;
     }
-    _timed(e, t, win) {
+    _timed(e, t, win2) {
       const dt = t - e.t;
       const a = Math.abs(dt);
-      this._judge(e, a <= win[0] ? PERFECT : a <= win[1] ? GREAT : a <= win[2] ? GOOD : BAD, dt);
+      this._judge(e, a <= win2[0] ? PERFECT : a <= win2[1] ? GREAT : a <= win2[2] ? GOOD : BAD, dt);
     }
     _judge(e, j, dt) {
       if (e.j >= 0) return;
@@ -3055,10 +3057,10 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const h = Math.max(thin ? 2.5 : 4, this.noteH * s * (thin ? 0.52 : 1));
       g.globalAlpha = alpha;
       g.fillStyle = style.rim;
-      rr(g, x0 - 1.5, y - h / 2 - 1.5, w + 3, h + 3, h / 2 + 1.5);
+      rr(g, x0 - 1.5, y - h / 2 - 1.5, w + 3, h + 3, h * 0.14 + 1.5);
       g.fill();
       g.fillStyle = style.body;
-      rr(g, x0, y - h / 2, w, h, h / 2);
+      rr(g, x0, y - h / 2, w, h, h * 0.14);
       g.fill();
       if (thin) {
         g.fillStyle = style.rim;
@@ -3075,13 +3077,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         }
       } else {
         g.fillStyle = style.light;
-        rr(g, x0 + h * 0.35, y - h * 0.34, w - h * 0.7, h * 0.26, h * 0.13);
+        rr(g, x0 + h * 0.3, y - h * 0.34, w - h * 0.6, h * 0.24, h * 0.04);
         g.fill();
         const cw = Math.max(2, Math.min(w * 0.1, h * 0.42));
         g.fillStyle = "rgba(255,255,255,0.92)";
-        rr(g, x0 + h * 0.22, y - h * 0.26, cw, h * 0.52, cw / 2);
+        rr(g, x0 + h * 0.2, y - h * 0.28, cw, h * 0.56, cw * 0.2);
         g.fill();
-        rr(g, x1 - h * 0.22 - cw, y - h * 0.26, cw, h * 0.52, cw / 2);
+        rr(g, x1 - h * 0.2 - cw, y - h * 0.28, cw, h * 0.56, cw * 0.2);
         g.fill();
       }
       g.globalAlpha = 1;
@@ -5253,7 +5255,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     if (opts.image) bg.style.backgroundImage = `url("${String(opts.image).replace(/"/g, "%22")}")`;
     else bg.classList.add("default");
     document.body.appendChild(root2);
-    const win = root2.querySelector(".gw");
+    const win2 = root2.querySelector(".gw");
     const body = root2.querySelector(".gw-body");
     let closed = false;
     const finish = () => {
@@ -5276,17 +5278,17 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       root2.querySelector("#gwTitle").textContent = t;
     }, finish, skip };
     opts.fill(body, api);
-    const full = Math.min(win.scrollHeight, root2.clientHeight * 0.94);
-    win.style.setProperty("--h1", Math.max(24, Math.round(full / 8)) + "px");
-    win.style.setProperty("--h2", Math.round(full) + "px");
-    win.classList.add("opening");
+    const full = Math.min(win2.scrollHeight, root2.clientHeight * 0.94);
+    win2.style.setProperty("--h1", Math.max(24, Math.round(full / 8)) + "px");
+    win2.style.setProperty("--h2", Math.round(full) + "px");
+    win2.classList.add("opening");
     const opened = () => {
       if (!closed) {
-        win.classList.remove("opening");
-        win.classList.add("open");
+        win2.classList.remove("opening");
+        win2.classList.add("open");
       }
     };
-    win.addEventListener("animationend", (e) => {
+    win2.addEventListener("animationend", (e) => {
       if (e.animationName === "gw-grow") opened();
     });
     setTimeout(opened, 2600);
@@ -5317,7 +5319,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   </div>
 </div>`;
     parent.appendChild(dim);
-    const win = dim.querySelector(".gw");
+    const win2 = dim.querySelector(".gw");
     const body = dim.querySelector(".gw-body");
     let closed = false;
     const close = () => {
@@ -5346,17 +5348,17 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     };
     api.setTitle(opts.title || "");
     opts.fill(body, api);
-    const full = Math.min(win.scrollHeight, parent.clientHeight * 0.94);
-    win.style.setProperty("--h1", Math.max(24, Math.round(full / 8)) + "px");
-    win.style.setProperty("--h2", Math.round(full) + "px");
-    win.classList.add("opening", "quick");
+    const full = Math.min(win2.scrollHeight, parent.clientHeight * 0.94);
+    win2.style.setProperty("--h1", Math.max(24, Math.round(full / 8)) + "px");
+    win2.style.setProperty("--h2", Math.round(full) + "px");
+    win2.classList.add("opening", "quick");
     const opened = () => {
       if (!closed) {
-        win.classList.remove("opening");
-        win.classList.add("open");
+        win2.classList.remove("opening");
+        win2.classList.add("open");
       }
     };
-    win.addEventListener("animationend", (e) => {
+    win2.addEventListener("animationend", (e) => {
       if (e.animationName === "gw-grow") opened();
     });
     setTimeout(opened, 1500);
@@ -6172,8 +6174,8 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       cosT[i] = Math.cos(2 * Math.PI * i / N);
       sinT[i] = -Math.sin(2 * Math.PI * i / N);
     }
-    const win = new Float32Array(N);
-    for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+    const win2 = new Float32Array(N);
+    for (let i = 0; i < N; i++) win2[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
     const re = new Float32Array(N), im = new Float32Array(N);
     const fft = () => {
       for (let i = 0; i < N; i++) {
@@ -6221,7 +6223,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     for (let f = 0; f < nF; f++) {
       const o = f * HOP;
       for (let i = 0; i < N; i++) {
-        re[i] = (x[o + i] || 0) * win[i];
+        re[i] = (x[o + i] || 0) * win2[i];
         im[i] = 0;
       }
       fft();
@@ -7738,10 +7740,10 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const h = thin ? Math.max(5, this.nh * 0.55) : this.nh;
       const w = b - a;
       g.fillStyle = st.rim;
-      rr2(g, a - 1.5, y - h / 2 - 1.5, w + 3, h + 3, h / 2 + 1.5);
+      rr2(g, a - 1.5, y - h / 2 - 1.5, w + 3, h + 3, h * 0.14 + 1.5);
       g.fill();
       g.fillStyle = st.body;
-      rr2(g, a, y - h / 2, w, h, h / 2);
+      rr2(g, a, y - h / 2, w, h, h * 0.14);
       g.fill();
       if (thin) {
         g.fillStyle = st.rim;
@@ -7757,13 +7759,13 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         }
       } else {
         g.fillStyle = st.light;
-        rr2(g, a + h * 0.35, y - h * 0.34, Math.max(1, w - h * 0.7), h * 0.26, h * 0.13);
+        rr2(g, a + h * 0.3, y - h * 0.34, Math.max(1, w - h * 0.6), h * 0.24, h * 0.04);
         g.fill();
         g.fillStyle = "rgba(255,255,255,0.92)";
         const cw = Math.max(2, Math.min(w * 0.1, h * 0.42));
-        rr2(g, a + h * 0.22, y - h * 0.26, cw, h * 0.52, cw / 2);
+        rr2(g, a + h * 0.2, y - h * 0.28, cw, h * 0.56, cw * 0.2);
         g.fill();
-        rr2(g, b - h * 0.22 - cw, y - h * 0.26, cw, h * 0.52, cw / 2);
+        rr2(g, b - h * 0.2 - cw, y - h * 0.28, cw, h * 0.56, cw * 0.2);
         g.fill();
       }
     }
