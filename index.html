@@ -708,6 +708,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
   var LANES = 12;
   var BEND_MAX = 6;
   var COMBO_CAP = 30;
+  var COMBO_TICK = 0.5;
   var EASES = ["linear", "in", "out"];
   var DIRS = ["up", "left", "right"];
   var r6 = (v) => Math.round(v * 1e6) / 1e6;
@@ -928,6 +929,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         };
         s.head = mk("head", s.t0, s.crit, s);
         s.ticks = pts.filter((p) => p.tick).map((p) => mk("tick", p.t, s.crit, s, { pt: p }));
+        s.cticks = [];
+        const b0 = P[0].beat, b1 = last2.beat;
+        for (let b = b0 + COMBO_TICK; b < b1 - 1e-6; b += COMBO_TICK) {
+          if (P.some((p) => Math.abs(p.beat - b) < 1e-6)) continue;
+          s.cticks.push(mk("ctick", T2(b), s.crit, s, { w: s.crit ? 0.4 : 0.2 }));
+        }
         s.tail = mk(s.flick ? "tailFlick" : "tail", s.t1, s.endCrit, s);
         notes.push(s);
       } else {
@@ -963,7 +970,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       els[i].j = 0;
       els.splice(i, 1);
     }
-    const order = { head: 0, tap: 0, flick: 0, trace: 0, traceFlick: 0, tick: 1, tail: 2, tailFlick: 2 };
+    const order = { head: 0, tap: 0, flick: 0, trace: 0, traceFlick: 0, tick: 1, ctick: 1, tail: 2, tailFlick: 2 };
     els.sort((a, b) => a.t - b.t || order[a.kind] - order[b.kind]);
     els.forEach((e, i) => {
       e.i = i;
@@ -2257,10 +2264,12 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         if (s.holders.size) s.lastHeld = t;
       }
       s.held = t >= s.t0 && (s.holders.size > 0 || t - s.lastHeld <= HOLD_GRACE && s.liftAt < s.lastHeld);
-      for (const e of s.ticks) {
-        if (e.j >= 0 || e.t > t) continue;
-        if (s.lastHeld >= e.t - HOLD_GRACE) this._judge(e, PERFECT, 0);
-        else if (t - e.t > LATE_WAIT) this._judge(e, MISS, 0);
+      for (const list of [s.ticks, s.cticks]) {
+        for (const e of list) {
+          if (e.j >= 0 || e.t > t) continue;
+          if (s.lastHeld >= e.t - HOLD_GRACE) this._judge(e, PERFECT, 0);
+          else if (t - e.t > LATE_WAIT) this._judge(e, MISS, 0);
+        }
       }
       const tail = s.tail;
       if (tail.j < 0) {
@@ -2279,7 +2288,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
           this._judge(tail, MISS, 0);
         }
       }
-      if (tail.j >= 0 && s.head.j >= 0 && s.ticks.every((e) => e.j >= 0) && (!tail.ghost || t >= s.t1)) {
+      if (tail.j >= 0 && s.head.j >= 0 && s.ticks.every((e) => e.j >= 0) && s.cticks.every((e) => e.j >= 0) && (!tail.ghost || t >= s.t1)) {
         s.done = true;
         s.held = false;
         for (const id of s.holders) {
@@ -3687,6 +3696,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       this.mode = "idle";
     }
     _fx(e, j, dt, show) {
+      if (e.kind === "ctick") return;
       const now2 = performance.now();
       if (j < 4) {
         const [l, r] = elRange(e);
@@ -3700,7 +3710,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
       const ahead = 0.15 + (this.audio.lat || 0);
       while (this.seCursor < els.length && els[this.seCursor].t < t + ahead) {
         const e = els[this.seCursor++];
-        if (e.t >= t - 0.05) this.audio.playSE(seKind(e), this.audio.ctxTimeOf(e.t));
+        if (e.kind !== "ctick" && e.t >= t - 0.05) this.audio.playSE(seKind(e), this.audio.ctxTimeOf(e.t));
       }
     }
     _loop(now2) {
@@ -7380,7 +7390,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         const ahead = 0.12 + (this.audio.lat || 0);
         while (this.seIdx < els.length && els[this.seIdx].t < t + ahead) {
           const e = els[this.seIdx++];
-          if (this.noteSound && e.t >= t - 0.04) this.audio.playSE(seKind2(e), this.audio.ctxTimeOf(e.t));
+          if (this.noteSound && e.kind !== "ctick" && e.t >= t - 0.04) this.audio.playSE(seKind2(e), this.audio.ctxTimeOf(e.t));
         }
         const aheadBeat = this.timer.timeToBeat(t + ahead);
         while (this.metroBeat <= aheadBeat) {
@@ -9444,6 +9454,25 @@ details.box[open]>summary::before{transform:rotate(45deg)}
         renderHome();
       }
     });
+    let countsSynced = false;
+    async function syncNoteCounts() {
+      if (countsSynced || !store.canEdit || store.mode !== "cloud") return;
+      countsSynced = true;
+      for (const s of store.songs.slice()) {
+        for (const k of DIFFS) {
+          const info = s.charts && s.charts[k];
+          if (!info) continue;
+          try {
+            const doc = await store.getChart(s.id, k);
+            if (!doc || !doc.chart) continue;
+            const total = compileChart(normalizeChart(doc.chart)).total;
+            if (total !== info.notes) await store.saveChart(s.id, k, doc.chart, doc.level ?? info.level, total);
+          } catch (e) {
+            countsSynced = false;
+          }
+        }
+      }
+    }
     function openAdmin() {
       if (!store.canEdit) {
         cur.admin = false;
@@ -11144,6 +11173,7 @@ details.box[open]>summary::before{transform:rotate(45deg)}
     store.on((what) => {
       if (what === "auth") loadMyScores().catch(() => {
       });
+      if ((what === "auth" || what === "songs") && store.canEdit) syncNoteCounts();
       if (what === "songs" || what === "mode" || what === "auth") {
         if (cur.screen === "home") renderHome();
         if (cur.screen === "songView") renderSong();
